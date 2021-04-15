@@ -1,6 +1,5 @@
 package xyz.anilkan.resource;
 
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.*;
 import xyz.anilkan.entity.Product;
@@ -39,5 +38,11 @@ public class ProductResource {
     @Description("Delete product")
     public boolean deleteProduct(@Name("id") UUID id) {
         return productService.deleteProduct(id);
+    }
+
+    @Mutation("updateProduct")
+    @Description("Update product")
+    public Uni<Product> updateProduct(@Name("id") UUID id, Product product) {
+        return productService.updateProduct(id, product);
     }
 }

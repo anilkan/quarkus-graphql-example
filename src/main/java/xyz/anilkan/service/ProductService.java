@@ -18,13 +18,11 @@ public class ProductService {
         final Product p1 = new Product();
         p1.setId(UUID.randomUUID());
         p1.setName("Product 01");
-
         productList.add(p1);
 
         final Product p2 = new Product();
         p2.setId(UUID.randomUUID());
         p2.setName("Product 02");
-
         productList.add(p2);
     }
 
@@ -48,4 +46,11 @@ public class ProductService {
         return productList.removeIf(p -> p.getId().equals(id));
     }
 
+    public Uni<Product> updateProduct (UUID id, Product product) {
+        int index = productList.indexOf(productList.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null));
+        product.setId(id);
+        productList.set(index, product);
+
+        return Uni.createFrom().item(product);
+    }
 }

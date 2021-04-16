@@ -1,10 +1,13 @@
 package xyz.anilkan.service;
 
 import xyz.anilkan.entity.Category;
+import xyz.anilkan.graphql.input.create.CreateCategoryInput;
+import xyz.anilkan.graphql.input.update.UpdateCategoryInput;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @ApplicationScoped
@@ -27,9 +30,28 @@ public class CategoryService {
         return categoryList.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
     }
 
-    public Category addCategory(Category category) {
+    public Category createCategory(CreateCategoryInput input) {
+        Objects.requireNonNull(input);
+
+        final Category category = new Category();
         category.setId(UUID.randomUUID());
+        category.setName(input.getName());
+
         categoryList.add(category);
+
+        return category;
+    }
+
+    public Category updateCategory (UUID id, UpdateCategoryInput input) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(input);
+
+        int index = categoryList.indexOf(categoryList.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null));
+
+        final Category category = categoryList.get(index);
+        category.setName(input.getName());
+
+        categoryList.set(index, category);
 
         return category;
     }
@@ -38,11 +60,4 @@ public class CategoryService {
         return categoryList.removeIf(c -> c.getId().equals(id));
     }
 
-    public Category updateCategory (UUID id, Category category) {
-        int index = categoryList.indexOf(categoryList.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null));
-        category.setId(id);
-        categoryList.set(index, category);
-
-        return category;
-    }
 }

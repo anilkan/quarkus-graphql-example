@@ -1,9 +1,9 @@
-package xyz.anilkan.entity;
+package xyz.anilkan.graphql.input.update;
 
-import org.eclipse.microprofile.graphql.Type;
+import org.eclipse.microprofile.graphql.Input;
 
-@Type
-public class Category extends Entity {
+@Input("UpdateCategoryInput")
+public class UpdateCategoryInput {
     private String name;
 
     public String getName() {

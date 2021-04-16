@@ -1,7 +1,13 @@
 package xyz.anilkan.resource;
 
+import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.*;
 import xyz.anilkan.entity.Category;
+import xyz.anilkan.graphql.input.create.CreateCategoryInput;
+import xyz.anilkan.graphql.input.update.UpdateCategoryInput;
+import xyz.anilkan.graphql.payload.create.CreateCategoryPayload;
+import xyz.anilkan.graphql.payload.delete.DeleteCategoryPayload;
+import xyz.anilkan.graphql.payload.update.UpdateCategoryPayload;
 import xyz.anilkan.service.CategoryService;
 
 import javax.inject.Inject;
@@ -22,25 +28,26 @@ public class CategoryResource {
 
     @Query("category")
     @Description("Get category")
-    public Category getCategory(@Name("id") UUID id) {
+    public Category getCategory(@NonNull @Name("id") UUID id) {
         return categoryService.getCategory(id);
     }
 
-    @Mutation("addCategory")
-    @Description("Add category")
-    public Category addCategory (Category category) {
-        return categoryService.addCategory(category);
-    }
-
-    @Mutation("deleteCategory")
-    @Description("Delete category")
-    public boolean deleteCategory (@Name("id") UUID id) {
-        return categoryService.deleteCategory(id);
+    @Mutation("createCategory")
+    @Description("Create new category.")
+    public CreateCategoryPayload createCategory (@NonNull @Name("input") CreateCategoryInput input) {
+        return new CreateCategoryPayload(categoryService.createCategory(input));
     }
 
     @Mutation("updateCategory")
     @Description("updateCategory")
-    public Category updateCategory (@Name("id") UUID id, Category category) {
-        return categoryService.updateCategory(id, category);
+    public UpdateCategoryPayload updateCategory (@NonNull @Name("id") UUID id, @NonNull @Name("input") UpdateCategoryInput input) {
+        return new UpdateCategoryPayload(categoryService.updateCategory(id, input));
+
+    }
+
+    @Mutation("deleteCategory")
+    @Description("Delete category")
+    public DeleteCategoryPayload deleteCategory (@NonNull @Name("id") UUID id) {
+        return new DeleteCategoryPayload(categoryService.deleteCategory(id));
     }
 }

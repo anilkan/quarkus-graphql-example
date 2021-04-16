@@ -1,20 +1,16 @@
-package xyz.anilkan.entity;
+package xyz.anilkan.graphql.payload.update;
 
 import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.Type;
+import xyz.anilkan.entity.Category;
 
 @Type
-public class Product extends Entity {
+public class UpdateCategoryPayload {
     @NotNull
-    private String name;
     private Category category;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public UpdateCategoryPayload(Category category) {
+        this.category = category;
     }
 
     public Category getCategory() {

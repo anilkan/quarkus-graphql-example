@@ -1,8 +1,13 @@
 package xyz.anilkan.resource;
 
-import io.smallrye.mutiny.Uni;
+import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.*;
 import xyz.anilkan.entity.Product;
+import xyz.anilkan.graphql.input.create.CreateProductInput;
+import xyz.anilkan.graphql.input.update.UpdateProductInput;
+import xyz.anilkan.graphql.payload.create.CreateProductPayload;
+import xyz.anilkan.graphql.payload.delete.DeleteProductPayload;
+import xyz.anilkan.graphql.payload.update.UpdateProductPayload;
 import xyz.anilkan.service.ProductService;
 
 import javax.inject.Inject;
@@ -18,31 +23,32 @@ public class ProductResource {
 
     @Query("products")
     @Description("Get all products")
-    public Uni<List<Product>> getAllProducts() {
-        return productService.getAllProduct().toUni();
+    public List<Product> getAllProducts() {
+        return productService.getAllProduct();
     }
 
     @Query("product")
     @Description("Get product")
-    public Uni<Product> getProduct(@Name("id") UUID id) {
+    public Product getProduct(@NonNull @Name("id") UUID id) {
         return productService.getProduct(id);
     }
 
-    @Mutation("addProduct")
-    @Description("Add product")
-    public Product addProduct(Product product) {
-        return productService.addProduct(product);
-    }
-
-    @Mutation("deleteProduct")
-    @Description("Delete product")
-    public boolean deleteProduct(@Name("id") UUID id) {
-        return productService.deleteProduct(id);
+    @Mutation("createProduct")
+    @Description("Create new product.")
+    public CreateProductPayload createProduct(@NonNull @Name("input") CreateProductInput input) {
+        return new CreateProductPayload(productService.createProduct(input));
     }
 
     @Mutation("updateProduct")
     @Description("Update product")
-    public Uni<Product> updateProduct(@Name("id") UUID id, Product product) {
-        return productService.updateProduct(id, product);
+    public UpdateProductPayload updateProduct(@NonNull @Name("id") UUID id, @NonNull @Name("input") UpdateProductInput input) {
+        return new UpdateProductPayload(productService.updateProduct(id, input));
     }
+
+    @Mutation("deleteProduct")
+    @Description("Delete product")
+    public DeleteProductPayload deleteProduct(@NonNull @Name("id") UUID id) {
+        return new DeleteProductPayload(productService.deleteProduct(id));
+    }
+
 }

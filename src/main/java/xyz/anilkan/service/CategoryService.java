@@ -1,19 +1,17 @@
 package xyz.anilkan.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import xyz.anilkan.entity.Category;
 import xyz.anilkan.graphql.input.create.CreateCategoryInput;
 import xyz.anilkan.graphql.input.update.UpdateCategoryInput;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @ApplicationScoped
 public class CategoryService {
 
-    private List<Category> categoryList = new ArrayList<>();
+    private final List<Category> categoryList = new ArrayList<>();
 
     public CategoryService() {
         final Category c1 = new Category();
@@ -22,7 +20,7 @@ public class CategoryService {
         categoryList.add(c1);
     }
 
-    public List<Category> getAllCategories () {
+    public List<Category> getAllCategories() {
         return categoryList;
     }
 
@@ -42,21 +40,33 @@ public class CategoryService {
         return category;
     }
 
-    public Category updateCategory (UUID id, UpdateCategoryInput input) {
+    public Category updateCategory(UUID id, UpdateCategoryInput input) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(input);
+
+        final ObjectMapper objectMapper = new ObjectMapper();
+        @SuppressWarnings("unchecked") final LinkedHashMap<String, Object> vars = objectMapper.convertValue(input, LinkedHashMap.class);
+
+        return updateCategory(id, vars);
+    }
+
+    public Category updateCategory(UUID id, LinkedHashMap<String, Object> vars) {
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(vars);
 
         int index = categoryList.indexOf(categoryList.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null));
 
         final Category category = categoryList.get(index);
-        category.setName(input.getName());
+
+        if (vars.containsKey("name"))
+            category.setName((String) vars.get("name"));
 
         categoryList.set(index, category);
 
         return category;
     }
 
-    public boolean deleteCategory (UUID id) {
+    public boolean deleteCategory(UUID id) {
         return categoryList.removeIf(c -> c.getId().equals(id));
     }
 

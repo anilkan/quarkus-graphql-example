@@ -1,13 +1,13 @@
 package xyz.anilkan.graphql.input.create;
 
-import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.Input;
+import org.eclipse.microprofile.graphql.NonNull;
 
 import java.util.UUID;
 
 @Input("CreateProductInput")
 public class CreateProductInput {
-    @NotNull
+    @NonNull
     private String name;
     private UUID categoryId;
 

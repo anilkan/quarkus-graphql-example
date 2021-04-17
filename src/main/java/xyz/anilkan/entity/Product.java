@@ -1,11 +1,14 @@
 package xyz.anilkan.entity;
 
-import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.Type;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Type
 public class Product extends Entity {
-    @NotNull
+    @NotBlank
+    @Size(min = 5, max = 255, message = "Product name length can not be less than 5 or more than 255.")
     private String name;
     private Category category;
 

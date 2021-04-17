@@ -1,6 +1,6 @@
-package xyz.anilkan.resource;
+package xyz.anilkan.graphql.resource;
 
-import io.smallrye.common.constraint.NotNull;
+import io.smallrye.graphql.api.Context;
 import org.eclipse.microprofile.graphql.*;
 import xyz.anilkan.entity.Product;
 import xyz.anilkan.graphql.input.create.CreateProductInput;
@@ -11,12 +11,16 @@ import xyz.anilkan.graphql.payload.update.UpdateProductPayload;
 import xyz.anilkan.service.ProductService;
 
 import javax.inject.Inject;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
 
 @GraphQLApi
 public class ProductResource {
+
+    @Inject
+    Context context;
 
     @Inject
     ProductService productService;
@@ -41,8 +45,9 @@ public class ProductResource {
 
     @Mutation("updateProduct")
     @Description("Update product")
+    @SuppressWarnings("unchecked")
     public UpdateProductPayload updateProduct(@NonNull @Name("id") UUID id, @NonNull @Name("input") UpdateProductInput input) {
-        return new UpdateProductPayload(productService.updateProduct(id, input));
+        return new UpdateProductPayload(productService.updateProduct(id, (LinkedHashMap<String, Object>) context.getArgument("input")));
     }
 
     @Mutation("deleteProduct")
@@ -50,5 +55,4 @@ public class ProductResource {
     public DeleteProductPayload deleteProduct(@NonNull @Name("id") UUID id) {
         return new DeleteProductPayload(productService.deleteProduct(id));
     }
-
 }

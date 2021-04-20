@@ -1,5 +1,6 @@
 package xyz.anilkan.entity;
 
+import io.vertx.mutiny.sqlclient.Row;
 import org.eclipse.microprofile.graphql.Type;
 
 import javax.validation.constraints.NotBlank;
@@ -17,5 +18,13 @@ public class Category extends Entity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public static Category from(Row row) {
+        final Category category = new Category();
+        category.setId(row.getUUID("id"));
+        category.setName(row.getString("name"));
+
+        return category;
     }
 }

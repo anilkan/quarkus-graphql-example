@@ -1,16 +1,20 @@
 package xyz.anilkan.entity;
 
-import org.eclipse.microprofile.graphql.Type;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
+import org.eclipse.microprofile.graphql.Ignore;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.util.UUID;
 
-@Type
 public class Product extends Entity {
     @NotBlank
     @Size(min = 5, max = 255, message = "Product name length can not be less than 5 or more than 255.")
     private String name;
-    private Category category;
+
+    @Ignore
+    private UUID categoryId;
 
     public String getName() {
         return name;
@@ -20,11 +24,20 @@ public class Product extends Entity {
         this.name = name;
     }
 
-    public Category getCategory() {
-        return category;
+    public UUID getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategoryId(UUID categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public static Product from (Row row) {
+        final Product product = new Product();
+        product.setId(row.getUUID("id"));
+        product.setName(row.getString("name"));
+        product.setCategoryId(row.getUUID("category_id"));
+
+        return product;
     }
 }

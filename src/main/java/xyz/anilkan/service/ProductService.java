@@ -1,6 +1,10 @@
 package xyz.anilkan.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.Tuple;
 import xyz.anilkan.entity.Product;
 import xyz.anilkan.exception.EntityValidationException;
 import xyz.anilkan.graphql.input.create.CreateProductInput;
@@ -19,46 +23,48 @@ public class ProductService {
     Validator validator;
 
     @Inject
+    io.vertx.mutiny.pgclient.PgPool client;
+
+    @Inject
     CategoryService categoryService;
 
-    private final List<Product> productList = new ArrayList<>();
-
     public ProductService() {
-        final Product p1 = new Product();
-        p1.setId(UUID.randomUUID());
-        p1.setName("Product 01");
-        productList.add(p1);
-
-        final Product p2 = new Product();
-        p2.setId(UUID.randomUUID());
-        p2.setName("Product 02");
-        productList.add(p2);
     }
 
-    public List<Product> getAllProduct() {
-        return productList;
+    public Multi<Product> getAllProduct() {
+        return client.preparedQuery("SELECT p.id, p.name, p.category_id FROM product p")
+                .execute()
+                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
+                .onItem().transform(Product::from);
     }
 
-    public Product getProduct(UUID id) {
-        return productList.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
+    public Uni<Product> getProduct(UUID id) {
+        Objects.requireNonNull(id);
+
+        return client.preparedQuery("SELECT p.id, p.name, p.category_id FROM product p WHERE p.id=$1")
+                .execute(Tuple.of(id))
+                .onItem().transform(RowSet::iterator)
+                .onItem().transform(iterator -> iterator.hasNext() ? Product.from(iterator.next()) : null);
     }
 
-    public Product createProduct(CreateProductInput input) {
+    public Uni<Product> createProduct(CreateProductInput input) {
         Objects.requireNonNull(input);
 
-        final Product product = new Product();
-        product.setId(UUID.randomUUID());
-        product.setName(input.getName());
-        product.setCategory(categoryService.getCategory(input.getCategoryId()));
+        return client.preparedQuery("INSERT INTO product(name, category_id) VALUES($1, $2) RETURNING id")
+                .execute(Tuple.of(input.getName(), input.getCategoryId()))
+                .onItem().transform(RowSet::iterator)
+                .onItem().transform(iterator -> iterator.next().getUUID("id"))
+                .onItem().transform(id -> {
+                    final Product product = new Product();
+                    product.setId(id);
+                    product.setName(input.getName());
+                    product.setCategoryId(input.getCategoryId());
 
-        validateProduct(product);
-
-        productList.add(product);
-
-        return product;
+                    return product;
+                });
     }
 
-    public Product updateProduct(UUID id, UpdateProductInput input) {
+    public Uni<Product> updateProduct(UUID id, UpdateProductInput input) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(input);
 
@@ -68,29 +74,33 @@ public class ProductService {
         return updateProduct(id, vars);
     }
 
-    public Product updateProduct(UUID id, LinkedHashMap<String, Object> vars) {
+    public Uni<Product> updateProduct(UUID id, LinkedHashMap<String, Object> vars) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(vars);
 
-        int index = productList.indexOf(productList.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null));
+        return getProduct(id)
+                .onItem().transform(p -> {
+                    if (vars.containsKey("name"))
+                        p.setName((String)vars.get("name"));
 
-        final Product product = productList.get(index);
+                    if (vars.containsKey("categoryId"))
+                        p.setCategoryId(UUID.fromString((String)vars.get("categoryId")));
 
-        if (vars.containsKey("name"))
-            product.setName((String) vars.get("name"));
-
-        if (vars.containsKey("categoryId"))
-            product.setCategory(categoryService.getCategory(UUID.fromString((String) vars.get("categoryId"))));
-
-        validateProduct(product);
-
-        productList.set(index, product);
-
-        return product;
+                    return p;
+        })
+                .onItem().transformToUni(p ->
+                    client.preparedQuery("UPDATE product SET name=$1, categoryId=$2 WHERE id=$3")
+                            .execute(Tuple.of(p.getName(), p.getCategoryId(), p.getId()))
+                .onItem().transform(rs -> rs.rowCount() > 0 ? p : null)
+        );
     }
 
-    public boolean deleteProduct(UUID id) {
-        return productList.removeIf(p -> p.getId().equals(id));
+    public Uni<Boolean> deleteProduct(UUID id) {
+        Objects.requireNonNull(id);
+
+        return client.preparedQuery("DELETE FROM product WHERE id=$1")
+                .execute(Tuple.of(id))
+                .onItem().transform(rs -> rs.rowCount() == 1);
     }
 
     private void validateProduct(Product product) {

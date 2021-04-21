@@ -8,6 +8,7 @@ import io.vertx.mutiny.sqlclient.Tuple;
 import xyz.anilkan.entity.Category;
 import xyz.anilkan.graphql.input.create.CreateCategoryInput;
 import xyz.anilkan.graphql.input.update.UpdateCategoryInput;
+import xyz.anilkan.repository.CategoryRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,64 +19,35 @@ import java.util.*;
 public class CategoryService {
 
     @Inject
-    Validator validator;
-
-    @Inject
-    io.vertx.mutiny.pgclient.PgPool client;
-
-    public CategoryService() {
-    }
+    CategoryRepository categoryRepo;
 
     public Multi<Category> getAllCategories() {
-        return Category.findAll(client);
+        return categoryRepo.getAll();
     }
 
-    public Uni<Category> getCategory(UUID id) {
+    public Uni<Category> findById(UUID id) {
         Objects.requireNonNull(id);
 
-        return Category.findById(client, id);
+        return categoryRepo.findById(id);
     }
 
-    public Uni<Category> createCategory(CreateCategoryInput input) {
-        Objects.requireNonNull(input);
+    public Uni<Category> createCategory(Category category) {
+        Objects.requireNonNull(category);
 
-        final Category category = new Category();
-        category.setName(input.getName());
-        return category.save(client);
+        return categoryRepo.create(category);
     }
 
-    public Uni<Category> updateCategory(UUID id, UpdateCategoryInput input) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(input);
+    public Uni<Category> updateCategory(Category category) {
+        Objects.requireNonNull(category);
 
-        final ObjectMapper objectMapper = new ObjectMapper();
-        @SuppressWarnings("unchecked") final LinkedHashMap<String, Object> vars = objectMapper.convertValue(input, LinkedHashMap.class);
-
-        return updateCategory(id, vars);
-    }
-
-    public Uni<Category> updateCategory(UUID id, LinkedHashMap<String, Object> vars) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(vars);
-
-        return getCategory(id)
-                .onItem().transform(c -> {
-                    if (vars.containsKey("name"))
-                        c.setName((String) vars.get("name"));
-
-                    return c;
-        })
-                .onItem().transformToUni(c ->
-                        client.preparedQuery("UPDATE category SET name=$1 WHERE id=$2").execute(Tuple.of(c.getName(), c.getId()))
-                            .onItem().transform(rs -> rs.rowCount() > 0 ? c : null)
-        );
+        return categoryRepo.update(category)
+                .onItem().transform(r -> r ? category : null)
+                .onItem().ifNull().failWith(new RuntimeException("An error occurred when update"));
     }
 
     public Uni<Boolean> deleteCategory(UUID id) {
         Objects.requireNonNull(id);
 
-        return client.preparedQuery("DELETE FROM category WHERE id=$1")
-                .execute(Tuple.of(id))
-                .onItem().transform(rs -> rs.rowCount() == 1);
+        return categoryRepo.delete(id);
     }
 }

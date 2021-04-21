@@ -26,29 +26,40 @@ public class CategoryResource {
     CategoryService categoryService;
 
     @Query("categories")
-    @Description("Get all categories")
+    @Description("Get all categories.")
     public Uni<List<Category>> getAllCategories() {
         return categoryService.getAllCategories().collect().asList();
     }
 
     @Query("category")
-    @Description("Get category")
+    @Description("Find category by id.")
     public Uni<Category> getCategory(@NonNull @Name("id") UUID id) {
-        return categoryService.getCategory(id);
+        return categoryService.findById(id);
     }
 
     @Mutation("createCategory")
     @Description("Create new category.")
     public Uni<CreateCategoryPayload> createCategory(@NonNull @Name("input") CreateCategoryInput input) {
-        return categoryService.createCategory(input)
+        final Category category = new Category();
+        category.setName(input.getName());
+
+        return categoryService.createCategory(category)
                 .onItem().transform(CreateCategoryPayload::new);
     }
 
     @Mutation("updateCategory")
-    @Description("updateCategory")
-    @SuppressWarnings("unchecked")
-    public Uni<UpdateCategoryPayload> updateCategory(@NonNull @Name("id") UUID id, @NonNull @Name("input") UpdateCategoryInput input) {
-        return categoryService.updateCategory(id, (LinkedHashMap<String, Object>) context.getArgument("input"))
+    @Description("Update category.")
+    public Uni<UpdateCategoryPayload> updateCategory(@NonNull @Name("input") UpdateCategoryInput input) {
+        final LinkedHashMap<String, Object> inputArgs = context.getArgument("input");
+
+        return categoryService.findById(input.getId())
+                .onItem().transform(c -> {
+                    if (inputArgs.containsKey("name"))
+                        c.setName(input.getName());
+
+                    return c;
+        })
+                .onItem().transformToUni(c -> categoryService.updateCategory(c))
                 .onItem().transform(UpdateCategoryPayload::new);
     }
 

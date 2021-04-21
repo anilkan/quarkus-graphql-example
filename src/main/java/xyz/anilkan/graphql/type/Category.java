@@ -1,13 +1,11 @@
-package xyz.anilkan.graphql.input.update;
+package xyz.anilkan.graphql.type;
 
-import org.eclipse.microprofile.graphql.Input;
-import org.eclipse.microprofile.graphql.NonNull;
+import org.eclipse.microprofile.graphql.Type;
 
 import java.util.UUID;
 
-@Input("UpdateCategoryInput")
-public class UpdateCategoryInput {
-    @NonNull
+@Type
+public class Category {
     private UUID id;
     private String name;
 

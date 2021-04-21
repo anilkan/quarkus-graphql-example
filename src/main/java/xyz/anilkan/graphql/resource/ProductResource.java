@@ -66,6 +66,6 @@ public class ProductResource {
     }
 
     public Uni<Category> category(@Source Product product) {
-        return categoryService.getCategory(product.getCategoryId());
+        return categoryService.findById(product.getCategoryId());
     }
 }

@@ -27,33 +27,21 @@ public class CategoryService {
     }
 
     public Multi<Category> getAllCategories() {
-        return client.preparedQuery("SELECT * FROM category c")
-                .execute()
-                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
-                .onItem().transform(Category::from);
+        return Category.findAll(client);
     }
 
     public Uni<Category> getCategory(UUID id) {
         Objects.requireNonNull(id);
 
-        return client.preparedQuery("SELECT id, name FROM category c WHERE id = $1")
-                .execute(Tuple.of(id))
-                .onItem().transform(RowSet::iterator)
-                .onItem().transform(iterator -> iterator.hasNext() ? Category.from(iterator.next()): null);
+        return Category.findById(client, id);
     }
 
     public Uni<Category> createCategory(CreateCategoryInput input) {
         Objects.requireNonNull(input);
 
-        return client.preparedQuery("INSERT INTO category(name) VALUES($1) RETURNING id")
-                .execute(Tuple.of(input.getName()))
-                .onItem().transform(rowSet -> rowSet.iterator().next().getUUID("id"))
-                .onItem().transform(id -> {
-                    final Category category = new Category();
-                    category.setId(id);
-                    category.setName(input.getName());
-                    return category;
-                });
+        final Category category = new Category();
+        category.setName(input.getName());
+        return category.save(client);
     }
 
     public Uni<Category> updateCategory(UUID id, UpdateCategoryInput input) {
@@ -90,5 +78,4 @@ public class CategoryService {
                 .execute(Tuple.of(id))
                 .onItem().transform(rs -> rs.rowCount() == 1);
     }
-
 }

@@ -1,7 +1,6 @@
 package xyz.anilkan.entity;
 
 import io.vertx.mutiny.sqlclient.Row;
-import io.vertx.mutiny.sqlclient.RowSet;
 import org.eclipse.microprofile.graphql.Ignore;
 
 import javax.validation.constraints.NotBlank;

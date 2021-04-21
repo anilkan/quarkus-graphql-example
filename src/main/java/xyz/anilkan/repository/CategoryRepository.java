@@ -46,7 +46,7 @@ public class CategoryRepository {
                 .execute(Tuple.of(id))
                 .onItem().transform(RowSet::iterator)
                 .onItem().transform(rs -> rs.hasNext() ? from(rs.next()) : null)
-                .onItem().ifNull().failWith(new EntityNotFoundException("Product not found!"));
+                .onItem().ifNull().failWith(new EntityNotFoundException("Category not found!"));
     }
 
     public Uni<Category> create(Category category) {

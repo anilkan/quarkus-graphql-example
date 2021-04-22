@@ -9,104 +9,49 @@ import xyz.anilkan.entity.Product;
 import xyz.anilkan.exception.EntityValidationException;
 import xyz.anilkan.graphql.input.create.CreateProductInput;
 import xyz.anilkan.graphql.input.update.UpdateProductInput;
+import xyz.anilkan.repository.ProductRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 import java.util.*;
 
 @ApplicationScoped
 public class ProductService {
 
     @Inject
-    Validator validator;
-
-    @Inject
-    io.vertx.mutiny.pgclient.PgPool client;
-
-    @Inject
-    CategoryService categoryService;
+    ProductRepository productRepo;
 
     public ProductService() {
     }
 
     public Multi<Product> getAllProduct() {
-        return client.preparedQuery("SELECT p.id, p.name, p.category_id FROM product p")
-                .execute()
-                .onItem().transformToMulti(set -> Multi.createFrom().iterable(set))
-                .onItem().transform(Product::from);
+        return productRepo.getAll();
     }
 
-    public Uni<Product> getProduct(UUID id) {
+    public Uni<Product> findProductById(UUID id) {
         Objects.requireNonNull(id);
 
-        return client.preparedQuery("SELECT p.id, p.name, p.category_id FROM product p WHERE p.id=$1")
-                .execute(Tuple.of(id))
-                .onItem().transform(RowSet::iterator)
-                .onItem().transform(iterator -> iterator.hasNext() ? Product.from(iterator.next()) : null);
+        return productRepo.findById(id);
     }
 
-    public Uni<Product> createProduct(CreateProductInput input) {
-        Objects.requireNonNull(input);
+    public Uni<Product> createProduct(Product product) {
+        Objects.requireNonNull(product);
 
-        return client.preparedQuery("INSERT INTO product(name, category_id) VALUES($1, $2) RETURNING id")
-                .execute(Tuple.of(input.getName(), input.getCategoryId()))
-                .onItem().transform(RowSet::iterator)
-                .onItem().transform(iterator -> iterator.next().getUUID("id"))
-                .onItem().transform(id -> {
-                    final Product product = new Product();
-                    product.setId(id);
-                    product.setName(input.getName());
-                    product.setCategoryId(input.getCategoryId());
-
-                    return product;
-                });
+        return productRepo.create(product);
     }
 
-    public Uni<Product> updateProduct(UUID id, UpdateProductInput input) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(input);
+    public Uni<Product> updateProduct(Product product) {
+        Objects.requireNonNull(product);
 
-        final ObjectMapper objectMapper = new ObjectMapper();
-        @SuppressWarnings("unchecked") final LinkedHashMap<String, Object> vars = objectMapper.convertValue(input, LinkedHashMap.class);
-
-        return updateProduct(id, vars);
-    }
-
-    public Uni<Product> updateProduct(UUID id, LinkedHashMap<String, Object> vars) {
-        Objects.requireNonNull(id);
-        Objects.requireNonNull(vars);
-
-        return getProduct(id)
-                .onItem().transform(p -> {
-                    if (vars.containsKey("name"))
-                        p.setName((String)vars.get("name"));
-
-                    if (vars.containsKey("categoryId"))
-                        p.setCategoryId(UUID.fromString((String)vars.get("categoryId")));
-
-                    return p;
-        })
-                .onItem().transformToUni(p ->
-                    client.preparedQuery("UPDATE product SET name=$1, categoryId=$2 WHERE id=$3")
-                            .execute(Tuple.of(p.getName(), p.getCategoryId(), p.getId()))
-                .onItem().transform(rs -> rs.rowCount() > 0 ? p : null)
-        );
+        return productRepo.update(product)
+                .onItem().transform(r -> r ? product : null)
+                .onItem().ifNull().failWith(new RuntimeException("An error occurred when update"));
     }
 
     public Uni<Boolean> deleteProduct(UUID id) {
         Objects.requireNonNull(id);
 
-        return client.preparedQuery("DELETE FROM product WHERE id=$1")
-                .execute(Tuple.of(id))
-                .onItem().transform(rs -> rs.rowCount() == 1);
-    }
-
-    private void validateProduct(Product product) {
-        final Set<ConstraintViolation<Object>> violations = validator.validate(product);
-
-        if (!violations.isEmpty())
-            throw new EntityValidationException(violations);
+        return productRepo.delete(id);
     }
 }

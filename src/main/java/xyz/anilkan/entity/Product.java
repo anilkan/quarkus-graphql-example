@@ -12,7 +12,6 @@ public class Product extends Entity {
     @Size(min = 5, max = 255, message = "Product name length can not be less than 5 or more than 255.")
     private String name;
 
-    @Ignore
     private UUID categoryId;
 
     public String getName() {

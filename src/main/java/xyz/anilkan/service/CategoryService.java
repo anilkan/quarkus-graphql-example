@@ -1,18 +1,12 @@
 package xyz.anilkan.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
 import xyz.anilkan.entity.Category;
-import xyz.anilkan.graphql.input.create.CreateCategoryInput;
-import xyz.anilkan.graphql.input.update.UpdateCategoryInput;
 import xyz.anilkan.repository.CategoryRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.validation.Validator;
 import java.util.*;
 
 @ApplicationScoped
@@ -21,11 +15,11 @@ public class CategoryService {
     @Inject
     CategoryRepository categoryRepo;
 
-    public Multi<Category> getAllCategories() {
+    public Multi<Category> getAllCategory() {
         return categoryRepo.getAll();
     }
 
-    public Uni<Category> findById(UUID id) {
+    public Uni<Category> findCategoryById(UUID id) {
         Objects.requireNonNull(id);
 
         return categoryRepo.findById(id);

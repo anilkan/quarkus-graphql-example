@@ -3,13 +3,13 @@ package xyz.anilkan.graphql.resource;
 import io.smallrye.graphql.api.Context;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.*;
-import xyz.anilkan.entity.Category;
-import xyz.anilkan.entity.Product;
 import xyz.anilkan.graphql.input.create.CreateProductInput;
 import xyz.anilkan.graphql.input.update.UpdateProductInput;
 import xyz.anilkan.graphql.payload.create.CreateProductPayload;
 import xyz.anilkan.graphql.payload.delete.DeleteProductPayload;
 import xyz.anilkan.graphql.payload.update.UpdateProductPayload;
+import xyz.anilkan.graphql.type.Category;
+import xyz.anilkan.graphql.type.Product;
 import xyz.anilkan.service.CategoryService;
 import xyz.anilkan.service.ProductService;
 
@@ -34,27 +34,47 @@ public class ProductResource {
     @Query("products")
     @Description("Get all products")
     public Uni<List<Product>> getAllProducts() {
-        return productService.getAllProduct().collect().asList();
+        return productService.getAllProduct()
+                .onItem().transform(Product::fromEntity)
+                .collect().asList();
     }
 
     @Query("product")
     @Description("Get product")
     public Uni<Product> getProduct(@NonNull @Name("id") UUID id) {
-        return productService.getProduct(id);
+        return productService.findProductById(id)
+                .onItem().transform(Product::fromEntity);
     }
 
     @Mutation("createProduct")
     @Description("Create new product.")
     public Uni<CreateProductPayload> createProduct(@NonNull @Name("input") CreateProductInput input) {
-        return productService.createProduct(input)
+        final xyz.anilkan.entity.Product entity = new xyz.anilkan.entity.Product();
+        entity.setName(input.getName());
+        entity.setCategoryId(input.getCategoryId());
+
+        return productService.createProduct(entity)
+                .onItem().transform(Product::fromEntity)
                 .onItem().transform(CreateProductPayload::new);
     }
 
     @Mutation("updateProduct")
-    @Description("Update product")
-    @SuppressWarnings("unchecked")
-    public Uni<UpdateProductPayload> updateProduct(@NonNull @Name("id") UUID id, @NonNull @Name("input") UpdateProductInput input) {
-        return productService.updateProduct(id, (LinkedHashMap<String, Object>) context.getArgument("input"))
+    @Description("Update product.")
+    public Uni<UpdateProductPayload> updateProduct(@NonNull @Name("input") UpdateProductInput input) {
+        final LinkedHashMap<String, Object> inputArgs = context.getArgument("input");
+
+        return productService.findProductById(input.getId())
+                .onItem().transform(p -> {
+                    if (inputArgs.containsKey("name"))
+                        p.setName(input.getName());
+
+                    if (inputArgs.containsKey("categoryId"))
+                        p.setCategoryId(input.getCategoryId());
+
+                    return p;
+        })
+                .onItem().transformToUni(p -> productService.updateProduct(p))
+                .onItem().transform(Product::fromEntity)
                 .onItem().transform(UpdateProductPayload::new);
     }
 
@@ -66,6 +86,7 @@ public class ProductResource {
     }
 
     public Uni<Category> category(@Source Product product) {
-        return categoryService.findById(product.getCategoryId());
+        return categoryService.findCategoryById(product.getCategoryId())
+                .onItem().transform(Category::fromEntity);
     }
 }

@@ -1,15 +1,15 @@
-package xyz.anilkan.graphql.input.update;
+package xyz.anilkan.graphql.type;
 
-import org.eclipse.microprofile.graphql.Input;
-import org.eclipse.microprofile.graphql.NonNull;
+import org.eclipse.microprofile.graphql.Ignore;
+import org.eclipse.microprofile.graphql.Type;
 
 import java.util.UUID;
 
-@Input("UpdateProductInput")
-public class UpdateProductInput {
-    @NonNull
+@Type
+public class Product {
     private UUID id;
     private String name;
+    @Ignore
     private UUID categoryId;
 
     public UUID getId() {
@@ -34,5 +34,14 @@ public class UpdateProductInput {
 
     public void setCategoryId(UUID categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public static Product fromEntity(xyz.anilkan.entity.Product entity) {
+        final Product product = new Product();
+        product.setId(entity.getId());
+        product.setName(entity.getName());
+        product.setCategoryId(entity.getCategoryId());
+
+        return product;
     }
 }

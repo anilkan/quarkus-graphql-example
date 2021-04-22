@@ -2,7 +2,7 @@ package xyz.anilkan.graphql.payload.create;
 
 import io.smallrye.common.constraint.NotNull;
 import org.eclipse.microprofile.graphql.Type;
-import xyz.anilkan.entity.Product;
+import xyz.anilkan.graphql.type.Product;
 
 @Type
 public class CreateProductPayload {

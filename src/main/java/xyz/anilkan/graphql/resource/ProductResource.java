@@ -86,6 +86,9 @@ public class ProductResource {
     }
 
     public Uni<Category> category(@Source Product product) {
+        if (product.getCategoryId() == null)
+            return Uni.createFrom().nullItem();
+
         return categoryService.findCategoryById(product.getCategoryId())
                 .onItem().transform(Category::fromEntity);
     }

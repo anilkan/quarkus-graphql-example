@@ -1,0 +1,12 @@
+mutation updateProduct($input: UpdateProductInput!){
+    updateProduct(input: $input) {
+        product {
+            id
+            name
+            category {
+                id
+                name
+            }
+        }
+    }
+}

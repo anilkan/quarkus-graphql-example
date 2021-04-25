@@ -22,13 +22,13 @@ import xyz.anilkan.helper.PageRequest;
 
 @ApplicationScoped
 public class ProductRepository {
-    private static String q_findAll = "SELECT p.id, p.name, p.category_id FROM product p ORDER BY id";
-    private static String q_findFirst = "SELECT p.id, p.name, p.category_id FROM product p ORDER BY id LIMIT $1";
-    private static String q_findFirstAfter = "SELECT p.id, p.name, p.category_id FROM product p WHERE p.id > $1 ORDER BY id LIMIT $2";
-    private static String q_findById = "SELECT p.id, p.name, p.category_id FROM product p WHERE p.id = $1";
-    private static String q_create = "INSERT INTO product(name, category_id) VALUES($1, $2) RETURNING id";
-    private static String q_update = "UPDATE product SET name = $1, category_id = $2 WHERE id = $3";
-    private static String q_delete = "DELETE FROM product WHERE id = $1";
+    private static final String q_findAll = "SELECT p.id, p.name, p.category_id FROM product p ORDER BY id";
+    private static final String q_findFirst = "SELECT p.id, p.name, p.category_id FROM product p ORDER BY id LIMIT $1";
+    private static final String q_findFirstAfter = "SELECT p.id, p.name, p.category_id FROM product p WHERE p.id > $1 ORDER BY id LIMIT $2";
+    private static final String q_findById = "SELECT p.id, p.name, p.category_id FROM product p WHERE p.id = $1";
+    private static final String q_create = "INSERT INTO product(name, category_id) VALUES($1, $2) RETURNING id";
+    private static final String q_update = "UPDATE product SET name = $1, category_id = $2 WHERE id = $3";
+    private static final String q_delete = "DELETE FROM product WHERE id = $1";
 
     @Inject
     Validator validator;

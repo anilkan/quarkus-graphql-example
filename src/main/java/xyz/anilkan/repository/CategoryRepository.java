@@ -22,13 +22,13 @@ import java.util.UUID;
 @ApplicationScoped
 public class CategoryRepository {
 
-    private static String q_findAll = "SELECT c.id, c.name FROM category c ORDER BY id";
-    private static String q_findFirst = "SELECT c.id, c.name FROM category c ORDER BY id LIMIT $1";
-    private static String q_findFirstAfter = "SELECT c.id, c.name FROM category c WHERE c.id > $1 ORDER BY id LIMIT $2";
-    private static String q_findById = "SELECT c.id, c.name FROM category c WHERE id=$1";
-    private static String q_create = "INSERT INTO category(name) VALUES($1) RETURNING id";
-    private static String q_update = "UPDATE category SET name=$1 WHERE id=$2";
-    private static String q_delete = "DELETE FROM category WHERE id=$1";
+    private static final String q_findAll = "SELECT c.id, c.name FROM category c ORDER BY id";
+    private static final String q_findFirst = "SELECT c.id, c.name FROM category c ORDER BY id LIMIT $1";
+    private static final String q_findFirstAfter = "SELECT c.id, c.name FROM category c WHERE c.id > $1 ORDER BY id LIMIT $2";
+    private static final String q_findById = "SELECT c.id, c.name FROM category c WHERE id=$1";
+    private static final String q_create = "INSERT INTO category(name) VALUES($1) RETURNING id";
+    private static final String q_update = "UPDATE category SET name=$1 WHERE id=$2";
+    private static final String q_delete = "DELETE FROM category WHERE id=$1";
 
     @Inject
     Validator validator;

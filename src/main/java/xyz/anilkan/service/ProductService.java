@@ -1,19 +1,14 @@
 package xyz.anilkan.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.sqlclient.RowSet;
-import io.vertx.mutiny.sqlclient.Tuple;
 import xyz.anilkan.entity.Product;
-import xyz.anilkan.exception.EntityValidationException;
-import xyz.anilkan.graphql.input.create.CreateProductInput;
-import xyz.anilkan.graphql.input.update.UpdateProductInput;
+import xyz.anilkan.helper.Page;
+import xyz.anilkan.helper.PageRequest;
 import xyz.anilkan.repository.ProductRepository;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.validation.ConstraintViolation;
 import java.util.*;
 
 @ApplicationScoped
@@ -25,8 +20,17 @@ public class ProductService {
     public ProductService() {
     }
 
+    @Deprecated
     public Multi<Product> getAllProduct() {
         return productRepo.getAll();
+    }
+
+    public Uni<Page<Product>> getAllProduct(PageRequest pageRequest) {
+        return productRepo.getAll(pageRequest);
+    }
+
+    public Multi<Product> getAllProduct(final Integer first, final UUID after) {
+        return productRepo.getAll(first, after);
     }
 
     public Uni<Product> findProductById(UUID id) {

@@ -1,8 +1,12 @@
 package xyz.anilkan.graphql.resource;
 
+import graphql.com.google.common.base.Strings;
+import graphql.relay.*;
+import io.smallrye.common.constraint.Nullable;
 import io.smallrye.graphql.api.Context;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.graphql.*;
+import xyz.anilkan.graphql.CursorHelper;
 import xyz.anilkan.graphql.input.create.CreateProductInput;
 import xyz.anilkan.graphql.input.update.UpdateProductInput;
 import xyz.anilkan.graphql.payload.create.CreateProductPayload;
@@ -10,6 +14,7 @@ import xyz.anilkan.graphql.payload.delete.DeleteProductPayload;
 import xyz.anilkan.graphql.payload.update.UpdateProductPayload;
 import xyz.anilkan.graphql.type.Category;
 import xyz.anilkan.graphql.type.Product;
+import xyz.anilkan.helper.PageRequest;
 import xyz.anilkan.service.CategoryService;
 import xyz.anilkan.service.ProductService;
 
@@ -17,6 +22,7 @@ import javax.inject.Inject;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @GraphQLApi
@@ -30,6 +36,30 @@ public class ProductResource {
 
     @Inject
     CategoryService categoryService;
+
+    @Query("productlist")
+    @Description("Relay Cursor-based pagination tests")
+    public Uni<Connection<Product>> getAllProducts(@Nullable @Name("first") final Integer first, @Nullable @Name("after") final String after) {
+        final Integer _first = first == null || first > 5 ? 5 : first;
+        final UUID _after = Strings.isNullOrEmpty(after) ? null : CursorHelper.decode(after);
+
+        return productService.getAllProduct(PageRequest.of(_first, _after))
+                .onItem().transform(page -> {
+                    List<Edge<Product>> edges = page.getResult().stream()
+                            .map(Product::fromEntity)
+                            .map(p -> new DefaultEdge<>(p, CursorHelper.encode(p.getId())))
+                            .collect(Collectors.toList());
+
+                    DefaultPageInfo defaultPageInfo = new DefaultPageInfo(
+                            (edges.size() > 0) ? edges.get(0).getCursor() : null,
+                            (edges.size() > 0) ? edges.get(edges.size() - 1).getCursor() : null,
+                            page.isHasPreviousPage(),
+                            page.isHasNextPage()
+                    );
+
+                    return new DefaultConnection<>(edges, defaultPageInfo);
+        });
+    }
 
     @Query("products")
     @Description("Get all products")

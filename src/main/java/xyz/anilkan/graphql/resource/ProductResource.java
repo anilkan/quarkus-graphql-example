@@ -37,8 +37,8 @@ public class ProductResource {
     @Inject
     CategoryService categoryService;
 
-    @Query("productlist")
-    @Description("Relay Cursor-based pagination tests")
+    @Query("products")
+    @Description("Get all products.")
     public Uni<Connection<Product>> getAllProducts(@Nullable @Name("first") final Integer first, @Nullable @Name("after") final String after) {
         final Integer _first = first == null || first > 5 ? 5 : first;
         final UUID _after = Strings.isNullOrEmpty(after) ? null : CursorHelper.decode(after);
@@ -61,6 +61,7 @@ public class ProductResource {
         });
     }
 
+    /*
     @Query("products")
     @Description("Get all products")
     public Uni<List<Product>> getAllProducts() {
@@ -68,6 +69,7 @@ public class ProductResource {
                 .onItem().transform(Product::fromEntity)
                 .collect().asList();
     }
+     */
 
     @Query("product")
     @Description("Get product")

@@ -3,6 +3,8 @@ package xyz.anilkan.service;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import xyz.anilkan.entity.Category;
+import xyz.anilkan.helper.Page;
+import xyz.anilkan.helper.PageRequest;
 import xyz.anilkan.repository.CategoryRepository;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -15,8 +17,17 @@ public class CategoryService {
     @Inject
     CategoryRepository categoryRepo;
 
+    @Deprecated
     public Multi<Category> getAllCategory() {
         return categoryRepo.getAll();
+    }
+
+    public Uni<Page<Category>> getAllCategory(PageRequest pageRequest) {
+        return categoryRepo.getAll(pageRequest);
+    }
+
+    public Multi<Category> getAllCategory(final Integer first, final UUID after) {
+        return categoryRepo.getAll(first, after);
     }
 
     public Uni<Category> findCategoryById(UUID id) {

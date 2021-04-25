@@ -69,7 +69,7 @@ public class ProductRepository {
         Objects.requireNonNull(first);
 
         if (first < 0)
-            throw new RuntimeException("First cannot be less than zero!");
+            throw new RuntimeException("first cannot be less than zero!");
 
         final String query = after == null ? q_findFirst : q_findFirstAfter;
         final Tuple params = after == null ? Tuple.of(first) : Tuple.of(after, first);
@@ -93,6 +93,8 @@ public class ProductRepository {
     public Uni<Product> create(Product product) {
         Objects.requireNonNull(product);
 
+        validate(product);
+
         return client.preparedQuery(q_create)
                 .execute(Tuple.of(product.getName(), product.getCategoryId()))
                 .onItem().transform(RowSet::iterator)
@@ -106,6 +108,8 @@ public class ProductRepository {
 
     public Uni<Boolean> update(Product product) {
         Objects.requireNonNull(product);
+
+        validate(product);
 
         return client.preparedQuery(q_update)
                 .execute(Tuple.of(product.getName(), product.getCategoryId(), product.getId()))
